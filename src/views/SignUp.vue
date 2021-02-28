@@ -62,7 +62,11 @@
         />
       </div>
 
-      <button class="btn btn-lg btn-primary btn-block mb-3" type="submit">
+      <button
+        :disabled="isProcessing"
+        class="btn btn-lg btn-primary btn-block mb-3"
+        type="submit"
+      >
         Submit
       </button>
 
@@ -78,17 +82,63 @@
 </template>
 
 <script>
+import authorizationAPI from '../apis/authorization'
+import { Toast } from '../utils/helpers'
+
 export default {
-  data() {
+  data () {
     return {
       name: "",
       email: "",
       password: "",
       passwordCheck: "",
+      isProcessing: false
     };
   },
   methods: {
-    handleSubmit() {
+    async handleSubmit () {
+      if (!this.name || !this.email || !this.password || !this.passwordCheck) {
+        Toast.fire({
+          icon: 'warning',
+          title: '請輸入所有欄位'
+        })
+        return
+      }
+
+      if (this.password !== this.passwordCheck) {
+        Toast.fire({
+          icon: 'warning',
+          title: '密碼確認錯誤！'
+        })
+        return
+      }
+
+      try {
+        this.isProcessing = true
+        const { data } = await authorizationAPI.signUp({
+          name: this.name,
+          email: this.email,
+          password: this.password,
+          passwordCheck: this.passwordCheck
+        })
+
+        console.log('sign up data', data)
+
+        if (data.status !== 'success') {
+          throw new Error(data.message)
+        }
+
+        localStorage.setItem('token', data.token)
+        this.$router.push({ name: 'SignIn' })
+      }
+      catch (error) {
+        this.isProcessing = false
+        console.log(error)
+        Toast.fire({
+          icon: 'error',
+          title: '無法新增使用者，請稍後再試'
+        })
+      }
       const data = {
         name: this.name,
         email: this.email,

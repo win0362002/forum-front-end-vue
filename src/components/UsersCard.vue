@@ -1,9 +1,9 @@
 <template>
   <div class="row text-center">
     <div v-for="user in users" :key="user.id" class="col-3">
-      <a href="#">
-        <img :src="user.image" width="140px" height="140px" />
-      </a>
+      <router-link :to="{ name: 'user', params: { id: user.id } }">
+        <img :src="user.image | emptyImage" width="140px" height="140px" />
+      </router-link>
       <h2>{{ user.name }}</h2>
       <span class="badge badge-secondary"
         >追蹤人數：{{ user.FollowerCount }}</span
@@ -11,7 +11,7 @@
       <p class="mt-3">
         <button
           v-if="user.isFollowed"
-          @click.stop.prevent="setFollower(user, false)"
+          @click.stop.prevent="deleteFollowing(user.id)"
           type="button"
           class="btn btn-danger"
         >
@@ -19,7 +19,7 @@
         </button>
         <button
           v-else
-          @click.stop.prevent="setFollower(user, true)"
+          @click.stop.prevent="addFollowing(user.id)"
           type="button"
           class="btn btn-primary"
         >
@@ -31,22 +31,26 @@
 </template>
 
 <script>
+import { emptyImageFilter } from "./../utils/mixins"
+import usersAPI from '../apis/Users'
+import { Toast } from '../utils/helpers'
+
 export default {
+  name: 'UsersCard',
+  mixins: [emptyImageFilter],
   props: {
     initialUsers: {
       type: Array,
       required: true,
     },
   },
-  data() {
+  data () {
     return {
-      users: this.initialUsers,
+      users: this.initialUsers
     };
   },
   methods: {
-    setFollower(user, setting) {
-      user.isFollowed = setting;
-    },
+
   },
 };
 </script>
