@@ -56,13 +56,9 @@ export default {
   methods: {
     setUser (newValue) {
       const { id } = this.$route.params
-      console.log('id', Number(id))
-      console.log('new id', newValue.id)
       if (Number(id) !== newValue.id) {
-        console.log('push not found')
         this.$router.push('/*')
       }
-      console.log('check')
 
       this.localCurrentUser = {
         ...newValue,
@@ -70,7 +66,6 @@ export default {
     },
     handleFileChange (e) {
       const { files } = e.target;
-      console.log('target', e.target)
       if (files.length === 0) {
         this.localCurrentUser.image = "";
         return;

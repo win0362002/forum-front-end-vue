@@ -56,6 +56,12 @@ export default {
       return apiHelper.get('/admin/users', {
         headers: { Authorization: `Bearer ${getToken()}` }
       })
+    },
+    changeRole ({ userId, isAdmin }) {
+      console.log('isAdmin', isAdmin)
+      return apiHelper.put(`/admin/users/${userId}`, isAdmin, {
+        headers: { Authorization: `Bearer ${getToken()}` }
+      })
     }
   }
 }
