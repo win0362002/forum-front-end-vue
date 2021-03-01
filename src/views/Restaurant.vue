@@ -21,63 +21,9 @@
 import RestaurantDetail from "../components/RestaurantDetail";
 import RestaurantComments from "../components/RestaurantComments";
 import CreateComment from "../components/CreateComment";
-
-const dummyData = {
-  restaurant: {
-    id: 1,
-    name: "Judy Runte",
-    tel: "(918) 827-1962",
-    address: "98138 Elisa Road",
-    opening_hours: "08:00",
-    description: "dicta et cupiditate",
-    image: "https://loremflickr.com/320/240/food,dessert,restaurant/?random=1",
-    createdAt: "2019-06-22T09:00:43.000Z",
-    updatedAt: "2019-06-22T09:00:43.000Z",
-    CategoryId: 3,
-    Category: {
-      id: 3,
-      name: "義大利料理",
-      createdAt: "2019-06-22T09:00:43.000Z",
-      updatedAt: "2019-06-22T09:00:43.000Z",
-    },
-    FavoritedUsers: [],
-    LikedUsers: [],
-    Comments: [
-      {
-        id: 3,
-        text: "Quos asperiores in nostrum cupiditate excepturi aspernatur.",
-        UserId: 2,
-        RestaurantId: 1,
-        createdAt: "2019-06-22T09:00:43.000Z",
-        updatedAt: "2019-06-22T09:00:43.000Z",
-        User: {
-          id: 2,
-          name: "user1",
-          email: "user1@example.com",
-          password:
-            "$2a$10$0ISHJI48xu/VRNVmEeycFe8v5ChyT305f8KaJVIhumu7M/eKAikkm",
-          image: "https://i.imgur.com/XooCt5K.png",
-          isAdmin: false,
-          createdAt: "2019-06-22T09:00:43.000Z",
-          updatedAt: "2019-06-23T01:16:31.000Z",
-        },
-      },
-    ],
-  },
-  isFavorited: false,
-  isLiked: false,
-};
-
-const dummyUser = {
-  currentUser: {
-    id: 1,
-    name: "管理者A",
-    email: "root@example.com",
-    image: "https://i.pravatar.cc/300",
-    isAdmin: true,
-  },
-  isAuthenticated: true,
-};
+import restaurantAPI from '../apis/restaurants'
+import { Toast } from '../utils/helpers'
+import { mapState } from 'vuex';
 
 export default {
   components: {
@@ -86,7 +32,7 @@ export default {
     CreateComment,
   },
   name: "Restaurant",
-  data() {
+  data () {
     return {
       restaurant: {
         id: -1,
@@ -100,51 +46,55 @@ export default {
         isFavorited: false,
         isLiked: false,
       },
-      restaurantComments: [],
-      currentUser: dummyUser.currentUser,
+      restaurantComments: []
     };
   },
   methods: {
-    fetchRestaurant(restaurantId) {
-      console.log("Restaurant id:", restaurantId);
+    async fetchRestaurant (restaurantId) {
+      try {
+        const { data } = await restaurantAPI.get({ restaurantId })
+        const { restaurant, isFavorited, isLiked } = data;
+        const {
+          id,
+          name,
+          Category,
+          image,
+          opening_hours: openingHours,
+          tel,
+          address,
+          description,
+        } = restaurant;
 
-      const { restaurant, isFavorited, isLiked } = dummyData;
-      const {
-        id,
-        name,
-        Category,
-        image,
-        opening_hours: openingHours,
-        tel,
-        address,
-        description,
-      } = restaurant;
+        this.restaurant = {
+          id,
+          name,
+          categoryName: Category ? Category.name : "未分類",
+          image,
+          openingHours,
+          tel,
+          address,
+          description,
+          isFavorited,
+          isLiked,
+        };
 
-      this.restaurant = {
-        id,
-        name,
-        categoryName: Category ? Category.name : "未分類",
-        image,
-        openingHours,
-        tel,
-        address,
-        description,
-        isFavorited,
-        isLiked,
-      };
+        this.restaurantComments = restaurant.Comments;
 
-      this.restaurantComments = restaurant.Comments;
+      }
+      catch (error) {
+        console.log(error)
+        Toast.fire({
+          icon: 'error',
+          title: '無法取得餐廳資訊，請稍後再試'
+        })
+      }
     },
-    deleteComment(commentId) {
-      console.log("deleteComment", commentId);
-
+    deleteComment (commentId) {
       this.restaurantComments = this.restaurantComments.filter(
         (comment) => comment.id !== commentId
       );
     },
-    createComment(payLoad) {
-      console.log(payLoad);
-
+    createComment (payLoad) {
       const { commentId, restaurantId, text } = payLoad;
       this.restaurantComments.push({
         id: commentId,
@@ -158,9 +108,17 @@ export default {
       });
     },
   },
-  created() {
+  created () {
     const { id } = this.$route.params;
     this.fetchRestaurant(id);
   },
+  computed: {
+    ...mapState(['currentUser', 'isAuthenticated'])
+  },
+  beforeRouteUpdate (to, from, next) {
+    const { id } = to.params
+    this.fetchRestaurant(id)
+    next()
+  }
 };
 </script>

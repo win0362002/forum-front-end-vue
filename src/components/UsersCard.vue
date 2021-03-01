@@ -32,8 +32,6 @@
 
 <script>
 import { emptyImageFilter } from "./../utils/mixins"
-import usersAPI from '../apis/Users'
-import { Toast } from '../utils/helpers'
 
 export default {
   name: 'UsersCard',

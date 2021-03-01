@@ -5,6 +5,7 @@
     <div v-for="comment in restaurantComments" :key="comment.id">
       <blockquote class="blockquote mb-0">
         <button
+          :disabled="isProcessing"
           v-if="currentUser.isAdmin"
           @click.stop.prevent="handleDeleteButtonClick(comment.id)"
           type="button"
@@ -27,16 +28,9 @@
 
 <script>
 import { fromNowFilter } from "../utils/mixins";
-
-const dummyUser = {
-  currentUser: {
-    id: 1,
-    name: "roo00t",
-    email: "root@example.com",
-    isAdmin: true,
-  },
-  isAuthenticated: true,
-};
+import restaurantAPI from '../apis/restaurants'
+import { mapState } from 'vuex'
+import { Toast } from '../utils/helpers'
 
 export default {
   props: {
@@ -45,19 +39,37 @@ export default {
       required: true,
     },
   },
-  data() {
+  data () {
     return {
-      currentUser: dummyUser.currentUser,
-    };
+      isProcessing: false
+    }
   },
   mixins: [fromNowFilter],
   methods: {
-    handleDeleteButtonClick(commentId) {
-      console.log("comment id:", commentId);
-      // TODO: 請求 API 伺服器刪除 id 為 commentId 的評論
-      // 觸發父層事件 - $emit( '事件名稱' , 傳遞的資料 )
-      this.$emit("after-delete-event", commentId);
+    async handleDeleteButtonClick (commentId) {
+      try {
+        this.isProcessing = true
+        const { data } = await restaurantAPI.deleteComment({ commentId })
+        if (data.status !== 'success') {
+          throw new Error(data.status)
+        }
+
+        // 觸發父層事件 - $emit( '事件名稱' , 傳遞的資料 )
+        this.$emit("after-delete-event", commentId);
+
+      }
+      catch (error) {
+        console(error)
+        Toast.fire({
+          icon: 'error',
+          title: '無法刪除評論，請稍後再試'
+        })
+      }
+      this.isProcessing = false
     },
   },
+  computed: {
+    ...mapState(['currentUser'])
+  }
 };
 </script>

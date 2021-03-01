@@ -81,7 +81,6 @@ export default {
       try {
         const { data } = await restaurantsAPI.getTopRestaurants()
         this.restaurants = data.restaurants
-        console.log('restaurants', this.restaurants)
       }
       catch (error) {
         console.log('error', error)

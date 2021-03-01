@@ -89,7 +89,12 @@ export default {
           throw new Error(data.message);
         }
 
+        //把token保留在local storage中
         localStorage.setItem("token", data.token);
+
+        //透過setCurrentUser把使用者資料待到vuex的state中
+        this.$store.commit('setCurrentUser', data.user)
+
         this.$router.push("/restaurants")
       }
       catch (e) {

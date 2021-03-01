@@ -65,8 +65,6 @@ export default {
           followerCount: user.FollowerCount,
           isFollowed: user.isFollowed
         }))
-        console.log('data', data)
-        console.log('users', this.users)
 
         //或是以下寫法：
         // this.users = data.users.map(user => {
