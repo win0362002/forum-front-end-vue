@@ -4,7 +4,7 @@
       <div class="form-group">
         <label for="name">Name</label>
         <input
-          v-model="currentUser.name"
+          v-model="localCurrentUser.name"
           id="name"
           type="text"
           name="name"
@@ -17,8 +17,8 @@
       <div class="form-group">
         <label for="image">Image</label>
         <img
-          v-if="currentUser.image"
-          :src="currentUser.image"
+          v-if="localCurrentUser.image"
+          :src="localCurrentUser.image"
           class="d-block img-thumbnail mb-3"
           width="200"
           height="200"
@@ -33,59 +33,92 @@
         />
       </div>
 
-      <button type="submit" class="btn btn-primary">Submit</button>
+      <button :disabled="isProcessing" type="submit" class="btn btn-primary">
+        Submit
+      </button>
     </form>
   </div>
 </template>
 
 <script>
-const dummyUser = {
-  currentUser: {
-    id: 1,
-    name: "root",
-    email: "root@example.com",
-    image: "https://i.imgur.com/58ImzMM.png",
-    isAdmin: true,
-  },
-  isAuthenticated: true,
-};
+import { mapState } from 'vuex'
+import usersAPI from '../apis/Users'
+import { Toast } from '../utils/helpers'
 
 export default {
   name: "UserEdit",
-  data() {
+  data () {
     return {
-      currentUser: {},
+      localCurrentUser: {},
+      isProcessing: false
     };
   },
   methods: {
-    fetchCurrentUser(id) {
-      console.log("UserId", id);
-      //Todo: 用API去get user data
-      this.currentUser = {
-        ...dummyUser.currentUser,
+    setUser (newValue) {
+      const { id } = this.$route.params
+      console.log('id', Number(id))
+      console.log('new id', newValue.id)
+      if (Number(id) !== newValue.id) {
+        console.log('push not found')
+        this.$router.push('/*')
+      }
+      console.log('check')
+
+      this.localCurrentUser = {
+        ...newValue,
       };
     },
-    handleFileChange(e) {
+    handleFileChange (e) {
       const { files } = e.target;
+      console.log('target', e.target)
       if (files.length === 0) {
-        this.currentUser.image = "";
+        this.localCurrentUser.image = "";
         return;
       } else {
         const imageURL = window.URL.createObjectURL(files[0]);
-        this.currentUser.image = imageURL;
+        this.localCurrentUser.image = imageURL;
       }
     },
-    handleSubmit(e) {
-      const form = e.target;
-      const formData = new FormData(form);
-      for (let [key, value] of formData) {
-        console.log(key + " : " + value);
+    async handleSubmit (e) {
+      try {
+        if (!this.localCurrentUser.name) {
+          Toast.fire({
+            icon: 'warning',
+            title: '請輸入使用者名稱'
+          })
+          return
+        }
+
+        this.isProcessing = true
+        const form = e.target;
+        const formData = new FormData(form);
+        const { data } = await usersAPI.updateUser({
+          userId: this.localCurrentUser.id,
+          formData
+        })
+        if (data.status !== 'success') {
+          throw new Error(data.message)
+        }
+        this.$router.push({ name: 'user', params: { id: this.localCurrentUser.id } })
       }
+      catch (error) {
+        this.isProcessing = false
+        console.log(error)
+        Toast.fire({
+          icon: 'error',
+          title: '無法更新用戶資訊，請稍後再試'
+        })
+      }
+
     },
   },
-  created() {
-    const { id } = this.$route.params;
-    this.fetchCurrentUser(id);
+  computed: {
+    ...mapState(['currentUser'])
   },
+  watch: {
+    currentUser (newValue) {
+      this.setUser(newValue)
+    }
+  }
 };
 </script>

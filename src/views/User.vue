@@ -40,17 +40,6 @@ import usersAPI from '../apis/Users'
 import { Toast } from '../utils/helpers'
 import { mapState } from 'vuex'
 
-// const dummyUser = {
-//   currentUser: {
-//     id: 1,
-//     name: "root",
-//     email: "root@example.com",
-//     image: "https://i.imgur.com/58ImzMM.png",
-//     isAdmin: true,
-//   },
-//   isAuthenticated: true,
-// };
-
 export default {
   name: "user",
   components: {
@@ -77,14 +66,12 @@ export default {
       comments: [],
       favoritedRestaurants: [],
       isFollowed: false
-      //currentUser: {},
     };
   },
   methods: {
     async fetchUser (userId) {
       try {
         const { data } = await usersAPI.get({ userId })
-        console.log('user data', data)
 
         this.profile = {
           id: data.profile.id,
@@ -101,12 +88,6 @@ export default {
         this.comments = data.profile.Comments;
         this.favoritedRestaurants = data.profile.FavoritedRestaurants;
         this.isFollowed = data.isFollowed
-        //this.currentUser = dummyUser.currentUser;
-
-        console.log('followings', this.followings)
-        console.log('followers', this.followers)
-        console.log('comments', this.comments)
-        console.log('isFollowed', this.isFollowed)
 
       } catch (error) {
         console.log(error)
